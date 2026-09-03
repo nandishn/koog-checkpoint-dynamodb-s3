@@ -1,4 +1,4 @@
-# koog-checkpoint-aws
+# koog-checkpoint-dynamodb-s3
 
 DynamoDB + S3 checkpoint persistence for [Koog](https://github.com/JetBrains/koog) agents.
 
@@ -12,7 +12,7 @@ Once released to Maven Central:
 
 ```kotlin
 dependencies {
-    implementation("io.github.nandishn:koog-checkpoint-aws:0.1.0")
+    implementation("io.github.nandishn:koog-checkpoint-dynamodb-s3:0.1.0")
 }
 ```
 
@@ -53,6 +53,7 @@ This library stores Koog execution checkpoints so an interrupted agent can resum
 - DynamoDB stores checkpoint metadata, ordering, lookup records, TTL, and S3 payload references.
 - S3 stores immutable, content-addressed checkpoint payloads.
 - Strongly consistent DynamoDB reads are enabled by default for immediate pod handoff.
+- Checkpoints expire after 30 days by default. The same value is written to DynamoDB TTL metadata and S3 retention metadata/tags; set `ttl = null` to omit both.
 - The library does not serialize concurrent requests for the same session; handle turn ordering in your application.
 
 See the docs below for deployment guidance, IAM policy shape, testing, and failure modes.
@@ -93,7 +94,7 @@ LOCALSTACK_ENDPOINT=http://localhost:4566 KOOG_AWS_INTEGRATION_TESTS=true ./grad
 Use the templates in:
 
 - [infra/terraform](infra/terraform)
-- [infra/cloudformation](infra/cloudformation/koog-checkpoint-aws.yaml)
+- [infra/cloudformation](infra/cloudformation/koog-checkpoint-dynamodb-s3.yaml)
 
 ## Docs
 
@@ -102,6 +103,7 @@ Use the templates in:
 - [Checkpointing vs chat memory](docs/checkpointing-vs-chat-memory.md)
 - [Failure modes](docs/failure-modes.md)
 - [Testing](docs/testing.md)
+- [Releasing](docs/releasing.md)
 
 ## License
 

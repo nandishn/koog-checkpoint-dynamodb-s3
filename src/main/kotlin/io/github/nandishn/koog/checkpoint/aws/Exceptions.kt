@@ -1,6 +1,6 @@
 package io.github.nandishn.koog.checkpoint.aws
 
-open class KoogAwsPersistenceException(
+open class DynamoDbS3CheckpointException(
     message: String,
     cause: Throwable? = null,
 ) : RuntimeException(message, cause)
@@ -9,7 +9,7 @@ class CheckpointAlreadyExistsException(
     agentIdHash: String,
     checkpointIdHash: String,
     cause: Throwable? = null,
-) : KoogAwsPersistenceException(
+) : DynamoDbS3CheckpointException(
     "Checkpoint already exists for agentHash=$agentIdHash checkpointHash=$checkpointIdHash with different payload",
     cause,
 )
@@ -17,14 +17,14 @@ class CheckpointAlreadyExistsException(
 internal class ConditionalCheckpointConflictException(
     message: String,
     cause: Throwable? = null,
-) : KoogAwsPersistenceException(message, cause)
+) : DynamoDbS3CheckpointException(message, cause)
 
 class CorruptCheckpointException(
     agentIdHash: String,
     checkpointIdHash: String,
     expectedSha256: String,
     actualSha256: String,
-) : KoogAwsPersistenceException(
+) : DynamoDbS3CheckpointException(
     "Checkpoint payload checksum mismatch for agentHash=$agentIdHash checkpointHash=$checkpointIdHash " +
         "expected=$expectedSha256 actual=$actualSha256",
 )
@@ -32,17 +32,15 @@ class CorruptCheckpointException(
 class MissingCheckpointPayloadException(
     agentIdHash: String,
     checkpointIdHash: String,
-    bucket: String,
-    key: String,
     cause: Throwable? = null,
-) : KoogAwsPersistenceException(
-    "Checkpoint payload is missing for agentHash=$agentIdHash checkpointHash=$checkpointIdHash at s3://$bucket/$key",
+) : DynamoDbS3CheckpointException(
+    "Checkpoint payload is missing for agentHash=$agentIdHash checkpointHash=$checkpointIdHash",
     cause,
 )
 
 class TooManyCheckpointsException(
     agentIdHash: String,
     maxCheckpointsPerList: Int,
-) : KoogAwsPersistenceException(
+) : DynamoDbS3CheckpointException(
     "Checkpoint query for agentHash=$agentIdHash exceeded maxCheckpointsPerList=$maxCheckpointsPerList",
 )

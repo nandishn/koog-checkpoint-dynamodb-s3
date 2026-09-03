@@ -40,21 +40,25 @@ internal class MutableClock(
 
 internal class FakePayloadStore : CheckpointPayloadStore {
     private val objects = linkedMapOf<String, ByteArray>()
+    val metadataByKey = linkedMapOf<String, PayloadMetadata>()
+    val deletedKeys = mutableListOf<String>()
     var corruptReads: Boolean = false
     var failReads: Throwable? = null
 
     override suspend fun put(ref: PayloadRef, bytes: ByteArray, metadata: PayloadMetadata) {
         objects[ref.key] = bytes.copyOf()
+        metadataByKey[ref.key] = metadata
     }
 
     override suspend fun get(ref: PayloadRef): ByteArray {
         failReads?.let { throw it }
         val bytes = objects[ref.key]
-            ?: throw MissingCheckpointPayloadException(ref.agentIdHash, ref.checkpointIdHash, ref.bucket, ref.key)
+            ?: throw MissingCheckpointPayloadException(ref.agentIdHash, ref.checkpointIdHash)
         return if (corruptReads) bytes + 1.toByte() else bytes.copyOf()
     }
 
     override suspend fun deleteBestEffort(ref: PayloadRef) {
+        deletedKeys += ref.key
         objects.remove(ref.key)
     }
 }
@@ -62,8 +66,12 @@ internal class FakePayloadStore : CheckpointPayloadStore {
 internal class FakeMetadataStore : CheckpointMetadataStore {
     private val checkpoints = linkedMapOf<Pair<String, String>, CheckpointMetadata>()
     private val lookup = linkedMapOf<Pair<String, String>, CheckpointMetadata>()
+    var failBeforePut: Exception? = null
+    var failAfterPut: Exception? = null
+    var failLookup: Exception? = null
 
     override suspend fun putCheckpointAndLookup(metadata: CheckpointMetadata) {
+        failBeforePut?.let { throw it }
         val checkpointKey = metadata.sessionPk to metadata.checkpointSk
         val lookupKey = metadata.sessionPk to metadata.checkpointLookupSk
         if (checkpoints.containsKey(checkpointKey) || lookup.containsKey(lookupKey)) {
@@ -71,13 +79,17 @@ internal class FakeMetadataStore : CheckpointMetadataStore {
         }
         checkpoints[checkpointKey] = metadata
         lookup[lookupKey] = metadata
+        failAfterPut?.let { throw it }
     }
 
     override suspend fun getByCheckpointId(
         sessionPk: String,
         checkpointIdHash: String,
         consistentRead: Boolean,
-    ): CheckpointMetadata? = lookup[sessionPk to "CPID#$checkpointIdHash"]
+    ): CheckpointMetadata? {
+        failLookup?.let { throw it }
+        return lookup[sessionPk to "CPID#$checkpointIdHash"]
+    }
 
     override suspend fun queryCheckpoints(sessionPk: String, query: CheckpointQuery): CheckpointMetadataPage {
         val allItems = checkpoints.values

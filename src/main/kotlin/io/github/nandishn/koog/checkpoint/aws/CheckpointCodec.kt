@@ -66,7 +66,7 @@ internal class JsonCheckpointCodec(
         val raw = when (metadata.compression) {
             Compression.None.storageName -> encoded
             Compression.Gzip.storageName -> gunzip(encoded)
-            else -> throw KoogAwsPersistenceException(
+            else -> throw DynamoDbS3CheckpointException(
                 "Unsupported checkpoint compression '${metadata.compression}' for checkpointHash=${metadata.checkpointIdHash}",
             )
         }

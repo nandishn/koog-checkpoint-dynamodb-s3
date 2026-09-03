@@ -1,11 +1,13 @@
 [versions]
 aws-sdk-kotlin = "1.8.33"
+dokka = "2.2.0"
 junit-jupiter = "5.13.4"
 koog = "1.2.0"
 kotlin = "2.4.0"
 kotlinx-coroutines = "1.11.0"
 kotlinx-serialization = "1.10.0"
 testcontainers = "1.21.3"
+vanniktech-maven-publish = "0.37.0"
 
 [libraries]
 aws-dynamodb = { module = "aws.sdk.kotlin:dynamodb", version.ref = "aws-sdk-kotlin" }
@@ -21,3 +23,5 @@ testcontainers-localstack = { module = "org.testcontainers:localstack", version.
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
+vanniktech-maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "vanniktech-maven-publish" }

@@ -31,6 +31,8 @@ internal data class PayloadMetadata(
     val schemaVersion: Int,
     val compression: String,
     val codec: String,
+    val expiresAtEpochSeconds: Long?,
+    val ttlDays: Long?,
     val tags: Map<String, String>,
 )
 

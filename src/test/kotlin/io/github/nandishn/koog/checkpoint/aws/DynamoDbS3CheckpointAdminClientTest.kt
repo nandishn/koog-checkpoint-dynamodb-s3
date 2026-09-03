@@ -6,12 +6,12 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-class KoogAwsCheckpointAdminClientTest {
+class DynamoDbS3CheckpointAdminClientTest {
     @Test
     fun `admin client inspects session without exposing raw ids`() = runTest {
         val config = testConfig()
         val repository = testRepository(config)
-        val admin = KoogAwsCheckpointAdminClient(repository)
+        val admin = DynamoDbS3CheckpointAdminClient(repository)
 
         repository.save("tenant-1:conversation-1", checkpoint("checkpoint-1", 1))
 
@@ -26,7 +26,7 @@ class KoogAwsCheckpointAdminClientTest {
     fun `admin client verifies healthy payloads and deletes checkpoints`() = runTest {
         val config = testConfig()
         val repository = testRepository(config)
-        val admin = KoogAwsCheckpointAdminClient(repository)
+        val admin = DynamoDbS3CheckpointAdminClient(repository)
 
         repository.save("agent-1", checkpoint("checkpoint-1", 1))
 

@@ -2,7 +2,7 @@ package io.github.nandishn.koog.checkpoint.aws
 
 import kotlin.time.Instant
 
-class KoogAwsCheckpointAdminClient internal constructor(
+class DynamoDbS3CheckpointAdminClient internal constructor(
     private val repository: CheckpointRepository,
 ) {
     suspend fun inspectSession(

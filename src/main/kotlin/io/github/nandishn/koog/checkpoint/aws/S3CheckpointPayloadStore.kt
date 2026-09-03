@@ -24,14 +24,16 @@ internal class S3CheckpointPayloadStore(
             body = ByteStream.fromBytes(bytes)
             contentType = "application/json"
             contentEncoding = if (metadata.compression == Compression.Gzip.storageName) "gzip" else null
-            this.metadata = mapOf(
-                "koog-schema-version" to metadata.schemaVersion.toString(),
-                "koog-agent-id-hash" to ref.agentIdHash,
-                "koog-checkpoint-id-hash" to ref.checkpointIdHash,
-                "koog-payload-sha256" to metadata.sha256,
-                "koog-codec" to metadata.codec,
-                "koog-compression" to metadata.compression,
-            )
+            this.metadata = buildMap {
+                put("koog-schema-version", metadata.schemaVersion.toString())
+                put("koog-agent-id-hash", ref.agentIdHash)
+                put("koog-checkpoint-id-hash", ref.checkpointIdHash)
+                put("koog-payload-sha256", metadata.sha256)
+                put("koog-codec", metadata.codec)
+                put("koog-compression", metadata.compression)
+                metadata.ttlDays?.let { put("koog-ttl-days", it.toString()) }
+                metadata.expiresAtEpochSeconds?.let { put("koog-expires-at", it.toString()) }
+            }
             tagging = metadata.tags.toTaggingHeader()
 
             when (val encryption = config.s3Encryption) {
@@ -85,8 +87,6 @@ internal class S3CheckpointPayloadStore(
         MissingCheckpointPayloadException(
             agentIdHash = ref.agentIdHash,
             checkpointIdHash = ref.checkpointIdHash,
-            bucket = ref.bucket,
-            key = ref.key,
             cause = cause,
         )
 }

@@ -51,7 +51,7 @@ internal class DynamoDbCheckpointMetadataStore(
                     "DynamoDB checkpoint transaction found an existing checkpoint record",
                     e,
                 )
-                else -> throw KoogAwsPersistenceException("DynamoDB checkpoint transaction was cancelled", e)
+                else -> throw DynamoDbS3CheckpointException("DynamoDB checkpoint transaction was cancelled", e)
             }
         }
     }

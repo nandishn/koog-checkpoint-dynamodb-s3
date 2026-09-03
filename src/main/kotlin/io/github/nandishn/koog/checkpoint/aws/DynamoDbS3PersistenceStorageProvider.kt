@@ -28,8 +28,8 @@ class DynamoDbS3PersistenceStorageProvider internal constructor(
     ): List<AgentCheckpointData> =
         repository.list(sessionId, filter ?: DynamoDbS3CheckpointFilter())
 
-    fun adminClient(): KoogAwsCheckpointAdminClient =
-        KoogAwsCheckpointAdminClient(repository)
+    fun adminClient(): DynamoDbS3CheckpointAdminClient =
+        DynamoDbS3CheckpointAdminClient(repository)
 
     override fun close() {
         clientLifecycle.close()

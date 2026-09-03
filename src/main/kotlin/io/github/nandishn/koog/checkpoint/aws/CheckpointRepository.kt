@@ -1,6 +1,7 @@
 package io.github.nandishn.koog.checkpoint.aws
 
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
+import kotlinx.coroutines.CancellationException
 import kotlin.time.TimeSource
 
 internal class CheckpointRepository(
@@ -20,6 +21,7 @@ internal class CheckpointRepository(
         val keys = keyFactory.keysFor(agentId, checkpoint, encoded.sha256, storedAt)
         val metadata = CheckpointMetadataFactory.create(keys, checkpoint, encoded, storedAt, config)
         val payloadRef = metadata.toPayloadRef()
+        var payloadStored = false
 
         try {
             payloadStore.put(
@@ -30,9 +32,12 @@ internal class CheckpointRepository(
                     schemaVersion = metadata.schemaVersion,
                     compression = metadata.compression,
                     codec = metadata.codec,
+                    expiresAtEpochSeconds = metadata.expiresAtEpochSeconds,
+                    ttlDays = config.ttlDays,
                     tags = payloadTags(metadata),
                 ),
             )
+            payloadStored = true
 
             metadataStore.putCheckpointAndLookup(metadata)
 
@@ -54,9 +59,11 @@ internal class CheckpointRepository(
             config.metrics.checkpointConflict(idempotent = false)
             payloadStore.deleteBestEffort(payloadRef)
             throw CheckpointAlreadyExistsException(keys.agentIdHash, keys.checkpointIdHash, e)
-        } catch (e: Throwable) {
-            payloadStore.deleteBestEffort(payloadRef)
+        } catch (e: CancellationException) {
             throw e
+        } catch (e: Exception) {
+            if (!payloadStored) throw e
+            reconcileMetadataFailure(keys, payloadRef, encoded, e)
         }
     }
 
@@ -240,10 +247,8 @@ internal class CheckpointRepository(
             put("koog-app", config.applicationName)
             put("koog-env", config.environment)
             put("koog-schema-version", metadata.schemaVersion.toString())
-            config.ttl?.let {
-                val days = it.inWholeDays.coerceAtLeast(1)
-                put("koog-ttl-days", days.toString())
-            }
+            config.ttlDays?.let { put("koog-ttl-days", it.toString()) }
+            metadata.expiresAtEpochSeconds?.let { put("koog-expires-at", it.toString()) }
         }
 
     private suspend fun listMetadata(sessionId: String, limit: Int): List<CheckpointMetadata> {
@@ -291,6 +296,37 @@ internal class CheckpointRepository(
             bucket = s3Bucket,
             key = s3Key,
         )
+
+    private suspend fun reconcileMetadataFailure(
+        keys: CheckpointKeys,
+        payloadRef: PayloadRef,
+        encoded: EncodedCheckpoint,
+        cause: Exception,
+    ) {
+        val existing = try {
+            metadataStore.getByCheckpointId(
+                sessionPk = keys.sessionPk,
+                checkpointIdHash = keys.checkpointIdHash,
+                consistentRead = config.consistentReads,
+            )
+        } catch (lookupFailure: Exception) {
+            cause.addSuppressed(lookupFailure)
+            throw cause
+        }
+
+        if (existing != null && existing.payloadSha256 == encoded.sha256) {
+            config.metrics.checkpointConflict(idempotent = true)
+            return
+        }
+
+        payloadStore.deleteBestEffort(payloadRef)
+        if (existing != null) {
+            config.metrics.checkpointConflict(idempotent = false)
+            throw CheckpointAlreadyExistsException(keys.agentIdHash, keys.checkpointIdHash, cause)
+        }
+
+        throw cause
+    }
 
     private fun Throwable.isRecoverableCheckpointLoadFailure(): Boolean =
         this is CorruptCheckpointException || this is MissingCheckpointPayloadException

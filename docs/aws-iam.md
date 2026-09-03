@@ -54,3 +54,4 @@ Security defaults:
 - S3 SSE-S3 is enabled by default.
 - The library does not log checkpoint payloads.
 - The runtime does not create or mutate infrastructure.
+- Checkpoints get 30-day DynamoDB TTL and S3 retention metadata/tags by default unless callers set `ttl = null`.

@@ -23,6 +23,8 @@ Current test coverage includes:
 - Admin inspect/verify/delete.
 - DynamoDB transaction client request token length.
 - Metadata privacy for raw checkpoint IDs.
+- Ambiguous DynamoDB write failure handling.
+- Default TTL, custom TTL, and TTL opt-out metadata behavior for DynamoDB and S3 payloads.
 - LocalStack integration test compilation during `check`.
 
 Run LocalStack integration tests:

@@ -26,6 +26,7 @@ Recommended production behavior:
 - Use idempotency keys for external tool calls.
 - Set readiness to false before pod shutdown.
 - Keep node clocks synchronized.
+- Keep the checkpoint `ttl` value aligned with S3 lifecycle expiration days, or disable both intentionally.
 
 What is protected:
 

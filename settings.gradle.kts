@@ -12,4 +12,4 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "koog-checkpoint-aws"
+rootProject.name = "koog-checkpoint-dynamodb-s3"

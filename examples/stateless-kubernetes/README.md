@@ -24,3 +24,4 @@ Production rules:
 - Serialize turns outside this library if a session must not run concurrently.
 - Use idempotency keys for external tool calls.
 - Close the root provider during application shutdown when using the convenience constructor.
+- Checkpoints expire after 30 days by default; change `ttl` and S3 lifecycle expiration days together.

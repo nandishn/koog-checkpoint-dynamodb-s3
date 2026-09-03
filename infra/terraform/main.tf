@@ -24,8 +24,14 @@ variable "checkpoint_prefix" {
 }
 
 variable "expiration_days" {
-  type    = number
-  default = 30
+  type     = number
+  default  = 30
+  nullable = true
+
+  validation {
+    condition     = var.expiration_days == null || var.expiration_days >= 1
+    error_message = "expiration_days must be null or at least 1."
+  }
 }
 
 resource "aws_dynamodb_table" "checkpoints" {
@@ -81,6 +87,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "payloads" {
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "payloads" {
+  count  = var.expiration_days == null ? 0 : 1
   bucket = aws_s3_bucket.payloads.id
 
   rule {
@@ -92,7 +99,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "payloads" {
     }
 
     expiration {
-      days = var.expiration_days
+      days = var.expiration_days == null ? 1 : var.expiration_days
     }
 
     abort_incomplete_multipart_upload {

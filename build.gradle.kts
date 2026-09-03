@@ -1,22 +1,20 @@
 plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.dokka)
+    alias(libs.plugins.vanniktech.maven.publish)
     `java-library`
-    `maven-publish`
-    signing
 }
 
 group = "io.github.nandishn"
-version = "0.1.0-SNAPSHOT"
+version = providers.gradleProperty("releaseVersion").orElse("0.1.0-SNAPSHOT").get()
 
-description = "DynamoDB + S3 checkpoint persistence provider for Koog agents."
+description = "DynamoDB and S3 checkpoint persistence provider for Koog agents."
 
 java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(17))
     }
-    withJavadocJar()
-    withSourcesJar()
 }
 
 kotlin {
@@ -30,11 +28,11 @@ sourceSets {
     }
 }
 
-val integrationTestImplementation: Configuration by configurations.getting {
+configurations.named("integrationTestImplementation") {
     extendsFrom(configurations.testImplementation.get())
 }
 
-val integrationTestRuntimeOnly: Configuration by configurations.getting {
+configurations.named("integrationTestRuntimeOnly") {
     extendsFrom(configurations.testRuntimeOnly.get())
 }
 
@@ -50,8 +48,8 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.junit.jupiter)
 
-    integrationTestImplementation(libs.testcontainers.junit.jupiter)
-    integrationTestImplementation(libs.testcontainers.localstack)
+    add("integrationTestImplementation", libs.testcontainers.junit.jupiter)
+    add("integrationTestImplementation", libs.testcontainers.localstack)
 }
 
 tasks.withType<Test>().configureEach {
@@ -73,7 +71,7 @@ tasks.withType<Jar>().configureEach {
     }
 }
 
-val integrationTest by tasks.registering(Test::class) {
+tasks.register<Test>("integrationTest") {
     description = "Runs integration tests against LocalStack or real AWS-compatible endpoints."
     group = LifecycleBasePlugin.VERIFICATION_GROUP
     testClassesDirs = sourceSets["integrationTest"].output.classesDirs
@@ -92,46 +90,39 @@ tasks.check {
     dependsOn(tasks.test, tasks.named("compileIntegrationTestKotlin"))
 }
 
-publishing {
-    publications {
-        create<MavenPublication>("mavenJava") {
-            from(components["java"])
-            artifactId = "koog-checkpoint-aws"
-            pom {
-                name.set("koog-checkpoint-aws")
-                description.set(project.description)
-                url.set("https://github.com/nandishn/koog-checkpoint-aws")
-                inceptionYear.set("2026")
-                licenses {
-                    license {
-                        name.set("The Apache License, Version 2.0")
-                        url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
-                    }
-                }
-                developers {
-                    developer {
-                        id.set("nandishn")
-                        name.set("Nandish")
-                        url.set("https://github.com/nandishn")
-                    }
-                }
-                issueManagement {
-                    system.set("GitHub Issues")
-                    url.set("https://github.com/nandishn/koog-checkpoint-aws/issues")
-                }
-                scm {
-                    connection.set("scm:git:https://github.com/nandishn/koog-checkpoint-aws.git")
-                    developerConnection.set("scm:git:ssh://git@github.com/nandishn/koog-checkpoint-aws.git")
-                    url.set("https://github.com/nandishn/koog-checkpoint-aws")
-                }
+mavenPublishing {
+    coordinates(project.group.toString(), "koog-checkpoint-dynamodb-s3", project.version.toString())
+    publishToMavenCentral()
+    if (providers.gradleProperty("signAllPublications").map(String::toBoolean).orElse(false).get()) {
+        signAllPublications()
+    }
+
+    pom {
+        name.set("koog-checkpoint-dynamodb-s3")
+        description.set(project.description)
+        url.set("https://github.com/nandishn/koog-checkpoint-dynamodb-s3")
+        inceptionYear.set("2026")
+        licenses {
+            license {
+                name.set("The Apache License, Version 2.0")
+                url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
             }
         }
+        developers {
+            developer {
+                id.set("nandishn")
+                name.set("Nandish")
+                url.set("https://github.com/nandishn")
+            }
+        }
+        issueManagement {
+            system.set("GitHub Issues")
+            url.set("https://github.com/nandishn/koog-checkpoint-dynamodb-s3/issues")
+        }
+        scm {
+            connection.set("scm:git:https://github.com/nandishn/koog-checkpoint-dynamodb-s3.git")
+            developerConnection.set("scm:git:ssh://git@github.com/nandishn/koog-checkpoint-dynamodb-s3.git")
+            url.set("https://github.com/nandishn/koog-checkpoint-dynamodb-s3")
+        }
     }
-}
-
-signing {
-    setRequired {
-        !version.toString().endsWith("SNAPSHOT") && gradle.taskGraph.hasTask("publish")
-    }
-    sign(publishing.publications["mavenJava"])
 }

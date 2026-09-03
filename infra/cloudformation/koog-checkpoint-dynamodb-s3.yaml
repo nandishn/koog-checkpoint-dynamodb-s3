@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: DynamoDB and S3 infrastructure for koog-checkpoint-aws.
+Description: DynamoDB and S3 infrastructure for koog-checkpoint-dynamodb-s3.
 
 Parameters:
   TableName:
@@ -13,6 +13,16 @@ Parameters:
   ExpirationDays:
     Type: Number
     Default: 30
+    MinValue: 1
+  EnableExpiration:
+    Type: String
+    Default: "true"
+    AllowedValues:
+      - "true"
+      - "false"
+
+Conditions:
+  HasExpiration: !Equals [!Ref EnableExpiration, "true"]
 
 Resources:
   CheckpointTable:
@@ -51,14 +61,16 @@ Resources:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: AES256
-      LifecycleConfiguration:
-        Rules:
-          - Id: ExpireKoogCheckpoints
-            Status: Enabled
-            Prefix: !Ref CheckpointPrefix
-            ExpirationInDays: !Ref ExpirationDays
-            AbortIncompleteMultipartUpload:
-              DaysAfterInitiation: 7
+      LifecycleConfiguration: !If
+        - HasExpiration
+        - Rules:
+            - Id: ExpireKoogCheckpoints
+              Status: Enabled
+              Prefix: !Ref CheckpointPrefix
+              ExpirationInDays: !Ref ExpirationDays
+              AbortIncompleteMultipartUpload:
+                DaysAfterInitiation: 7
+        - !Ref AWS::NoValue
 
 Outputs:
   DynamoDbTableName:
