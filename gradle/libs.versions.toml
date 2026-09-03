@@ -1,0 +1,23 @@
+[versions]
+aws-sdk-kotlin = "1.8.33"
+junit-jupiter = "5.13.4"
+koog = "1.2.0"
+kotlin = "2.4.0"
+kotlinx-coroutines = "1.11.0"
+kotlinx-serialization = "1.10.0"
+testcontainers = "1.21.3"
+
+[libraries]
+aws-dynamodb = { module = "aws.sdk.kotlin:dynamodb", version.ref = "aws-sdk-kotlin" }
+aws-s3 = { module = "aws.sdk.kotlin:s3", version.ref = "aws-sdk-kotlin" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit-jupiter" }
+koog-snapshot = { module = "ai.koog:agents-features-snapshot-jvm", version.ref = "koog" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
+testcontainers-junit-jupiter = { module = "org.testcontainers:junit-jupiter", version.ref = "testcontainers" }
+testcontainers-localstack = { module = "org.testcontainers:localstack", version.ref = "testcontainers" }
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
