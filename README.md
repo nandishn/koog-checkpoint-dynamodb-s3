@@ -71,6 +71,23 @@ check(verification.isHealthy)
 
 Admin reports expose hashed session/checkpoint IDs only.
 
+## Sensitive Session IDs
+
+The default `Sha256` hashing keeps raw session and checkpoint IDs out of DynamoDB keys, S3 keys, and admin reports. If your session IDs are predictable or sensitive, use HMAC hashing with a secret loaded from your runtime secret manager:
+
+```kotlin
+val hashSecret = requireNotNull(System.getenv("KOOG_CHECKPOINT_HASH_SECRET"))
+
+val provider = DynamoDbS3PersistenceStorageProvider.create {
+    region = "us-west-2"
+    tableName = "koog-checkpoints"
+    bucketName = "my-agent-checkpoints"
+    idHashing = IdHashing.HmacSha256 { hashSecret.encodeToByteArray() }
+}
+```
+
+Changing the hashing strategy changes lookup keys, so existing checkpoints will not be discoverable unless you migrate or keep the same strategy.
+
 ## Test From Source
 
 ```bash

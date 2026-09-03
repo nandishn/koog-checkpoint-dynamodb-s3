@@ -230,6 +230,31 @@ class DynamoDbS3PersistenceStorageProviderIntegrationTest {
     }
 
     @Test
+    fun `recoverable latest payload failure skips to previous checkpoint`() = runBlocking {
+        withAwsResources {
+            val sessionId = "tenant-1:skip-to-previous"
+            val provider = provider {
+                corruptCheckpointPolicy = CorruptCheckpointPolicy.SkipAndContinue
+            }
+
+            provider.saveCheckpoint(sessionId, checkpoint("checkpoint-1", 1))
+            provider.saveCheckpoint(sessionId, checkpoint("checkpoint-2", 2))
+            val latestS3Key = sessionItems(sessionId)
+                .single { it.stringAttr("entityType") == "checkpoint" && it.numberAttr("version") == "2" }
+                .stringAttr("s3Key")
+            s3.deleteObject {
+                bucket = bucketName
+                key = latestS3Key
+            }
+
+            val loaded = provider.getLatestCheckpoint(sessionId)
+
+            assertNotNull(loaded)
+            assertEquals("checkpoint-1", loaded.checkpointId)
+        }
+    }
+
+    @Test
     fun `corrupt payload is reported by admin and respects load policy`() = runBlocking {
         withAwsResources {
             val sessionId = "tenant-1:corrupt-payload"

@@ -46,7 +46,9 @@ jobs:
         run: |
           set -euo pipefail
           for attempt in $(seq 1 30); do
-            if curl -fsS http://localhost:4566/_localstack/health > /dev/null; then
+            health="$(curl -fsS http://localhost:4566/_localstack/health || true)"
+            if printf '%s' "${health}" | grep -q '"s3": "available"' &&
+              printf '%s' "${health}" | grep -q '"dynamodb": "available"'; then
               exit 0
             fi
             sleep 2
