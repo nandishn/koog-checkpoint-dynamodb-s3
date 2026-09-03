@@ -18,9 +18,12 @@ class HashingTest {
         val first = dynamoDbClientRequestToken(*parts)
         val second = dynamoDbClientRequestToken(*parts)
         val changed = dynamoDbClientRequestToken(*parts.copyOf().also { it[3] = "different-payload" })
+        val tableA = dynamoDbClientRequestToken("put", "table-a", *parts)
+        val tableB = dynamoDbClientRequestToken("put", "table-b", *parts)
 
         assertTrue(first.length in 1..36)
         assertEquals(first, second)
         assertNotEquals(first, changed)
+        assertNotEquals(tableA, tableB)
     }
 }

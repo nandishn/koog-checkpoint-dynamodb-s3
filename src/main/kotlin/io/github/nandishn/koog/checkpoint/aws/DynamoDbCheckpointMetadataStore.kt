@@ -36,6 +36,8 @@ internal class DynamoDbCheckpointMetadataStore(
                     },
                 )
                 clientRequestToken = dynamoDbClientRequestToken(
+                    "put",
+                    tableName,
                     metadata.sessionPk,
                     metadata.checkpointSk,
                     metadata.checkpointLookupSk,
@@ -130,6 +132,7 @@ internal class DynamoDbCheckpointMetadataStore(
             )
             clientRequestToken = dynamoDbClientRequestToken(
                 "delete",
+                tableName,
                 metadata.sessionPk,
                 metadata.checkpointSk,
                 metadata.checkpointLookupSk,
