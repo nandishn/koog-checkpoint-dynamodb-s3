@@ -46,5 +46,5 @@ The workflow runs unit checks, LocalStack integration tests, and `publishToMaven
 For local Maven Central publishing outside GitHub Actions, keep credentials in `~/.gradle/gradle.properties` and pass:
 
 ```bash
-./gradlew -PreleaseVersion=0.1.0 -PsignAllPublications=true publishToMavenCentral
+./gradlew -PreleaseVersion=0.1.0 -PkoogReleaseSigning=true publishToMavenCentral
 ```

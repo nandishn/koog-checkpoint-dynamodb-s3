@@ -92,10 +92,10 @@ tasks.check {
 
 mavenPublishing {
     coordinates(project.group.toString(), "koog-checkpoint-dynamodb-s3", project.version.toString())
-    publishToMavenCentral()
-    if (providers.gradleProperty("signAllPublications").map(String::toBoolean).orElse(false).get()) {
+    if (providers.gradleProperty("koogReleaseSigning").map(String::toBoolean).orElse(false).get()) {
         signAllPublications()
     }
+    publishToMavenCentral()
 
     pom {
         name.set("koog-checkpoint-dynamodb-s3")
